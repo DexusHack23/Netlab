@@ -1,0 +1,14 @@
+__pycache__/
+*.pyc
+datos/
+guias/
+vms/
+ia_env/
+*.db
+*.pcap
+*.pcapng
+*.pkt
+*.pka
+config.json
+.venv/
+venv/

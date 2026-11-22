@@ -1,0 +1,416 @@
+<!doctype html>
+<html lang="es" translate="no">
+<head>
+<meta name="google" content="notranslate">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NetLab</title>
+<script>
+// Red de seguridad: si algún script o estilo no carga (conexión rechazada al abrir), recarga UNA vez en vez de quedar rota.
+window.addEventListener("error", (e) => {
+  const t = e.target;
+  if (!t || !(t.tagName === "SCRIPT" || t.tagName === "LINK")) return;
+  try { if (sessionStorage.getItem("netlab_recarga")) return; sessionStorage.setItem("netlab_recarga", "1"); } catch { return; }
+  setTimeout(() => location.reload(), 800);
+}, true);
+window.addEventListener("load", () => setTimeout(() => { try { sessionStorage.removeItem("netlab_recarga"); } catch {} }, 5000));
+</script>
+<link rel="stylesheet" href="/web/style.css">
+<link rel="icon" href="/web/icono.ico">
+</head>
+<body>
+<aside class="lateral">
+  <div class="marca"><span class="logo">⌁</span> NetLab<div class="lema">CCNA · Wireshark · Linux · Rust · IA</div></div>
+  <button class="jugador" id="jugador" data-vista="logros" title="Tu nivel y logros">
+    <div class="j-fila"><span class="j-nivel" id="jNivel">1</span><span class="j-titulo" id="jTitulo">Novato</span><span class="j-racha" id="jRacha"></span></div>
+    <div class="j-barra"><i id="jBarra"></i></div><div class="j-xp" id="jXp">0 XP</div>
+  </button>
+  <button class="chico idioma-btn" id="btnIdioma">🌐 Español → English</button>
+  <nav>
+    <button data-vista="inicio" class="activo">🏠 Inicio</button>
+    <button data-vista="repaso">🧠 Repaso <span class="badge" id="badgeRepaso" hidden></span></button>
+    <div class="nav-grupo">CCNA</div>
+    <button data-vista="ruta">🗺️ Ruta CCNA</button>
+    <button data-vista="practica">Práctica Packet Tracer</button>
+    <button data-vista="examen">Examen</button>
+    <button data-vista="subneteo">Subneteo</button>
+    <button data-vista="jitl">Laboratorios JITL</button>
+    <button data-vista="constructor">Constructor</button>
+    <div class="nav-grupo">Ciberseguridad</div>
+    <button data-vista="wireshark">🦈 Wireshark</button>
+    <button data-vista="linux">🐧 Linux</button>
+    <button data-vista="soc">🚨 SOC</button>
+    <button data-vista="siem">🛰️ SIEM</button>
+    <button data-vista="rvb">⚔️ Red vs Blue</button>
+    <button data-vista="indice">🗺️ Ruta ofensiva</button>
+    <div class="nav-grupo">Academia</div>
+    <button data-vista="rust">🦀 Rust</button>
+    <button data-vista="ia">🧠 IA</button>
+    <button data-vista="torch">🔥 PyTorch</button>
+    <button data-vista="chisel">🔩 Chisel</button>
+    <button data-vista="rustproj">🛠️ Proyectos Rust</button>
+    <button data-vista="cpu">🔧 Procesadores</button>
+    <button data-vista="sv">📐 SystemVerilog</button>
+    <div class="nav-grupo">Estudio</div>
+    <button data-vista="teoria">📖 Teoría</button>
+    <button data-vista="retos">Arrastrar y soltar</button>
+    <button data-vista="guias">Guías</button>
+    <button data-vista="historial">Historial</button>
+    <button data-vista="salud">🩺 Estado</button>
+    <button data-vista="ajustes">Ajustes</button>
+  </nav>
+  <div class="estado-ollama" id="estadoOllama">Conectando…</div>
+</aside>
+
+<main>
+  <!-- ============================== RUTA ============================== -->
+  <section id="v-inicio" class="vista visible">
+    <header class="cabeza"><h1>🏠 Inicio</h1>
+      <p class="sub">Elige tu mundo. Cada uno tiene ruta por niveles, jefes y medidor de "¿estoy listo para la certificación?".</p></header>
+    <div id="misionDia" class="tarjeta mision"></div>
+    <div id="inicioMundos" class="mundos"></div>
+  </section>
+
+  <section id="v-ruta" class="vista">
+    <header class="cabeza">
+      <h1>🗺️ Ruta CCNA</h1>
+      <div class="ccna-atajos">
+        <button data-ir-a="practica">🧩 Práctica Packet Tracer</button><button data-ir-a="examen">📝 Examen / simulacro</button>
+        <button data-ir-a="subneteo">🧮 Subneteo</button><button data-ir-a="jitl">🧪 JITL</button><button data-ir-a="constructor">🏗️ Constructor</button>
+        <button data-ir-a="retos">🧲 Arrastrar y soltar</button></div>
+      <p class="sub">De básico a superior, siguiendo el temario del CCNA 200-301. Un tema queda dominado con 8/10 o más.</p>
+    </header>
+    <div id="ccnaListo" class="tarjeta"></div>
+    <div id="siguiente" class="tarjeta destacada"></div>
+    <div id="niveles"></div>
+  </section>
+
+  <!-- ============================= REPASO ============================= -->
+  <section id="v-repaso" class="vista">
+    <header class="cabeza"><h1>🧠 Cuaderno de errores</h1>
+      <p class="sub">Todo lo que fallas en el lab se guarda aquí y vuelve justo antes de que se te olvide (repaso espaciado).</p></header>
+    <div id="repasoVista"></div>
+  </section>
+
+  <!-- ============================= TEORÍA ============================= -->
+  <section id="v-teoria" class="vista">
+    <header class="cabeza">
+      <h1>Teoría</h1>
+      <p class="sub">Lecciones de cada tema en español o en inglés, para leer o escuchar. Usan tus guías cuando hay algo del tema, y puedes preguntarle al tutor con texto o con tu voz.</p>
+      <div id="tMundo" style="margin-top:6px"></div>
+    </header>
+    <div class="tarjeta">
+      <div class="fila">
+        <label>Tema<select id="tTema"></select></label>
+        <label>Idioma<select id="tIdioma"><option value="es">Español</option><option value="en">English</option></select></label>
+      </div>
+      <label>Enfoque (opcional; si no eliges tema, escribe aquí de qué la quieres)
+        <input id="tEnfoque" placeholder="Ej. diferencia entre ruta estática flotante y ruta por defecto">
+      </label>
+      <div class="acciones"><button class="primario" id="btnLeccion">Preparar lección</button></div>
+    </div>
+    <div id="teoriaVista"></div>
+    <div class="tarjeta" id="tGuardadas"></div>
+  </section>
+
+  <!-- ============================ PRÁCTICA ============================ -->
+  <section id="v-practica" class="vista">
+    <header class="cabeza">
+      <h1>Práctica de Packet Tracer</h1>
+      <p class="sub">Describe lo que quieres o elige un tema. La práctica se autovalida antes de llegarte.</p>
+    </header>
+    <div class="tarjeta" id="formPractica">
+      <div class="fila">
+        <label>Tema<select id="pTema"></select></label>
+        <label>Nivel<select id="pNivel"></select></label>
+        <label>Modo
+          <select id="pModo">
+            <option value="guiado">Guiado (te doy la config base)</option>
+            <option value="desde_cero">Desde cero</option>
+            <option value="troubleshooting">Troubleshooting (encuentra las fallas)</option>
+          </select>
+        </label>
+      </div>
+      <label>Descripción (opcional)
+        <textarea id="pDesc" rows="3" placeholder="Ej. una sucursal con 3 VLANs, router-on-a-stick, DHCP en el router y salida a internet con PAT"></textarea>
+      </label>
+      <div class="acciones"><button class="primario" id="btnGenPractica">Generar práctica</button></div>
+    </div>
+    <div id="practicaVista"></div>
+  </section>
+
+  <!-- ============================= EXAMEN ============================= -->
+  <section id="v-examen" class="vista">
+    <header class="cabeza">
+      <h1 id="eTitulo">Examen</h1>
+      <p class="sub" id="eSub">Opción múltiple y comandos de IOS. Puedes escribir comandos abreviados (sh ip int br).</p>
+    </header>
+    <div id="eVolver"></div>
+    <div class="tarjeta" id="formExamen">
+      <div class="fila">
+        <label>Tema<select id="eTema"></select></label>
+        <label>Nivel<select id="eNivel"></select></label>
+        <label>Preguntas<input id="eN" type="number" min="3" max="30" value="10"></label>
+      </div>
+      <label>Enfoque (opcional)
+        <input id="eDesc" placeholder="Ej. solo cálculo de wildcards y subredes /27">
+      </label>
+      <div class="acciones"><button class="primario" id="btnGenExamen">Generar examen</button></div>
+    </div>
+    <div class="tarjeta" id="tarjetaSimulacro">
+      <h3 style="margin-top:0">Simulacro tipo CCNA</h3>
+      <p class="sub">Preguntas de todos los dominios con el peso del examen real, cronómetro y resultados por dominio. Tarda unos minutos en prepararse.</p>
+      <div class="fila">
+        <label>Preguntas
+          <select id="sN"><option value="30">30 (36 min)</option><option value="60" selected>60 (72 min)</option><option value="100">100 (120 min)</option></select>
+        </label>
+      </div>
+      <div class="acciones"><button class="primario" id="btnSimulacro">Preparar simulacro</button></div>
+    </div>
+    <div id="examenVista"></div>
+  </section>
+
+  <!-- =========================== SUBNETEO =========================== -->
+  <section id="v-subneteo" class="vista">
+    <header class="cabeza">
+      <h1>Subneteo</h1>
+      <p class="sub">Ejercicios infinitos con la solución paso a paso, contra reloj, exámenes, VLSM e IPv6. Cuenta para tu progreso en "Direccionamiento IPv4 y subneteo".</p>
+    </header>
+    <div id="subneteoVista"></div>
+  </section>
+
+  <!-- ============================= RETOS ============================= -->
+  <section id="v-retos" class="vista">
+    <header class="cabeza"><h1>Arrastrar y soltar</h1>
+      <p class="sub">Retos de clasificar, emparejar y ordenar como los del examen del CCNA, más Wireshark y Linux. Respuestas exactas (no usa IA), infinitos y con explicación.</p></header>
+    <div id="retosVista"></div>
+  </section>
+
+  <!-- ============================= JITL ============================= -->
+  <section id="v-jitl" class="vista">
+    <header class="cabeza">
+      <h1>Laboratorios JITL</h1>
+      <p class="sub" id="jitlCarpeta">Tus laboratorios de Jeremy's IT Lab. Se abren en Packet Tracer con tu escala.</p>
+    </header>
+    <div class="tarjeta"><table class="tabla" id="tablaJitl"></table></div>
+  </section>
+
+  <!-- ========================== CONSTRUCTOR ========================== -->
+  <section id="v-constructor" class="vista">
+    <header class="cabeza">
+      <h1>Constructor de topologías</h1>
+      <p class="sub">Describe la red y te la dejo lista para Packet Tracer: solo cables o ya configurada. Sin calificación, para experimentar.</p>
+    </header>
+    <div class="tarjeta">
+      <label>¿Qué red quieres armar?
+        <textarea id="cDesc" rows="3" placeholder="Ej. 3 routers en triángulo con OSPF área 0, cada uno con un switch y 2 PCs"></textarea>
+      </label>
+      <div class="ejemplos" id="cEjemplos"></div>
+      <div class="acciones"><button class="primario" id="btnConstruir">Diseñar topología</button></div>
+    </div>
+    <div id="constructorVista"></div>
+  </section>
+
+  <!-- =========================== WIRESHARK =========================== -->
+  <section id="v-wireshark" class="vista">
+    <header class="cabeza">
+      <h1>Wireshark</h1>
+      <div class="acciones" style="float:right"><button id="btnWsExamen">📝 Examen tipo WCA-101</button></div>
+      <p class="sub" id="wsEstado">Capturas generadas con su clave: contestas preguntas leyendo los paquetes y escribes filtros que se prueban con tshark de verdad.</p>
+    </header>
+    <div id="wsEscenarios"></div>
+    <div id="wsVista"></div>
+    <div id="wsExtras"></div>
+    <div class="tarjeta">
+      <h3 style="margin-top:0">Analizar mi propia captura</h3>
+      <p class="sub">Elige un .pcap o .pcapng. tshark saca las estadísticas y el modelo te explica qué pasa y qué filtros usar. El archivo se borra en cuanto termina.</p>
+      <div class="fila">
+        <label>Archivo<input type="file" id="wsArchivo" accept=".pcap,.pcapng,.cap"></label>
+        <label>¿Qué quieres saber? (opcional)<input id="wsPregunta" placeholder="Ej. ¿por qué está lenta la descarga?"></label>
+      </div>
+      <div class="acciones"><button class="primario" id="btnWsAnalizar">Analizar</button></div>
+      <div id="wsAnalisis"></div>
+    </div>
+  </section>
+
+  <!-- ============================= LINUX ============================= -->
+  <section id="v-linux" class="vista">
+    <header class="cabeza">
+      <h1>Linux</h1>
+      <p class="sub">Misiones en una terminal de Ubuntu simulada (no toca tu PC): moverte, archivos, buscar en logs, tuberías tipo SOC, permisos, servicios y red. Cada misión da hasta 3 ★ si la haces sin ayuda.</p>
+    </header>
+    <div id="linuxVista"></div>
+  </section>
+
+  <!-- =============================== SOC =============================== -->
+  <section id="v-soc" class="vista">
+    <header class="cabeza"><h1>🚨 SOC</h1>
+      <p class="sub">Trabajo de analista N1: investiga alertas con logs de Windows y Sysmon en un mini SIEM, analiza correos reportados y resuelve casos de ransomware, malware con C2, amenaza interna y cuentas de Microsoft 365 comprometidas. Cada caso es distinto y se califica exacto. Lo que falles de Event IDs y ATT&CK va a tu cuaderno de errores.</p></header>
+    <div id="socVista"></div>
+  </section>
+
+  <!-- =============================== SIEM =============================== -->
+  <section id="v-siem" class="vista">
+    <header class="cabeza"><h1>🛰️ SIEM</h1>
+      <p class="sub">Caza incidentes reales en Elasticsearch + Kibana corriendo en tu VM de Ubuntu. NetLab siembra el ataque en los logs y tú lo investigas como analista N1. Casos infinitos, estilo TryHackMe SAL1.</p></header>
+    <div id="siemVista"></div>
+  </section>
+
+  <!-- ============================ ACADEMIA ============================ -->
+  <section id="v-rust" class="vista">
+    <header class="cabeza"><h1>🦀 Rust</h1>
+      <p class="sub">El Rust Book por niveles, con retos de ciberseguridad. Tu código se compila con el Rust de tu PC y se califica con pruebas ocultas. 3 ★ si lo haces sin ayuda; cada nivel termina con un jefe.</p></header>
+    <div id="acVista_rust"></div>
+  </section>
+  <section id="v-ia" class="vista">
+    <header class="cabeza"><h1>🧠 Inteligencia Artificial</h1>
+      <p class="sub">De vectores y gradientes a un detector de anomalías y un mini modelo de lenguaje, programados por ti en Rust.</p></header>
+    <div id="acVista_ia"></div>
+  </section>
+  <section id="v-torch" class="vista">
+    <header class="cabeza"><h1>🔥 PyTorch</h1>
+      <p class="sub">Deep learning de verdad en tu RTX 5070 Ti: tensores y autograd, backprop a mano, MNIST con MLP y CNN, un detector de intrusiones con métricas de SOC, atención y un mini GPT. Tu código corre en el entorno ia_env y se califica con pruebas ocultas.</p></header>
+    <div id="acVista_torch"></div>
+  </section>
+  <section id="v-chisel" class="vista">
+    <header class="cabeza"><h1>🔩 Chisel</h1>
+      <p class="sub">Diseño de hardware digital en Chisel (Scala): compuertas, sumadores, multiplexores, registros, una ALU y máquinas de estado. Se prueban con chiseltest en tu PC y puedes ver el Verilog que generan. Ideal después de Procesadores.</p></header>
+    <div id="acVista_chisel"></div>
+  </section>
+  <section id="v-salud" class="vista">
+    <header class="cabeza"><h1>🩺 Estado de NetLab</h1>
+      <p class="sub">Un vistazo rápido a qué está listo y qué no: modelos de IA, compiladores, la máquina virtual y cada mundo. Si algo falla, aquí ves qué.</p></header>
+    <div id="saludVista"></div>
+  </section>
+  <section id="v-rustproj" class="vista">
+    <header class="cabeza"><h1>🛠️ Proyectos Rust</h1>
+      <p class="sub">Proyectos grandes con cargo: construyes herramientas reales de redes y SOC —un escáner de puertos, un parser de .pcap y un mini IDS— pieza por pieza. Tu código se compila y prueba con <code>cargo test</code> en tu PC. Ideal después del mundo Rust.</p></header>
+    <div id="acVista_rustproj"></div>
+  </section>
+  <section id="v-cpu" class="vista">
+    <header class="cabeza"><h1>🔧 Procesadores</h1>
+      <p class="sub">Bits, compuertas, ALU, un emulador RISC-V, caché y la anatomía de un buffer overflow, todo en Rust.</p></header>
+    <div id="acVista_cpu"></div>
+  </section>
+  <section id="v-sv" class="vista">
+    <header class="cabeza"><h1>📐 SystemVerilog</h1>
+      <p class="sub">Diseño digital y verificación de hardware con SystemVerilog: tipos y señales, lógica combinacional y secuencial, máquinas de estado, testbenches, clases y aleatorización, cobertura y aserciones (SVA). Teoría basada en el estándar IEEE 1800-2023 y el manual de Verilator; la práctica se hace en EDA Playground o con Verilator. Ideal después de Procesadores y Chisel.</p></header>
+    <div id="svRuta"></div>
+  </section>
+
+  <!-- ====================== RUTA OFENSIVA (ÍNDICE) ====================== -->
+  <section id="v-indice" class="vista">
+    <header class="cabeza"><h1>🗺️ Ruta ofensiva</h1>
+      <p class="sub">Tu mapa hacia TryHackMe, Hack The Box y labs oficiales en tu VM, ordenado por tema. Marcas tu avance, guardas notas y cada tema trae su teoría (por qué funciona y con qué se detecta) y una práctica de defensa en NetLab. Aquí no se genera ningún ataque.</p></header>
+    <div id="indiceVista"></div>
+  </section>
+
+  <!-- =========================== RED VS BLUE =========================== -->
+  <section id="v-rvb" class="vista">
+    <header class="cabeza"><h1>⚔️ Red vs Blue</h1>
+      <p class="sub">Un atacante juega contra ti y tú defiendes, con reloj, en CCNA, Wireshark, Linux, Web o Windows / Active Directory. Todo es simulado: no toca tu PC ni tu red.</p></header>
+    <div id="rvbVista"></div>
+  </section>
+
+  <!-- ============================= GUÍAS ============================= -->
+  <section id="v-guias" class="vista">
+    <header class="cabeza">
+      <h1>Guías</h1>
+      <p class="sub">Tus PDFs, .txt y .md de consulta. Al generar prácticas, exámenes o analizar capturas, la app busca aquí lo del tema y se lo pasa al modelo para que no invente comandos ni campos.</p>
+    </header>
+    <div class="tarjeta">
+      <p class="sub" id="gEstado">Cargando…</p>
+      <table class="tabla" id="tablaGuias"></table>
+      <div class="acciones">
+        <button class="primario" id="btnIndexar">Indexar lo nuevo</button>
+        <button id="btnAbrirGuias">Abrir la carpeta</button>
+        <button id="btnBajarGuias">⬇️ Bajar guías oficiales (Cisco + libro de Linux)</button>
+      </div>
+      <div id="gTrabajo"></div>
+    </div>
+    <div class="tarjeta">
+      <h3 style="margin-top:0">Buscar en tus guías</h3>
+      <p class="sub">Para comprobar qué encuentra la app (es lo mismo que le pasa al modelo).</p>
+      <div class="fila-filtro"><input id="gQ" placeholder="Ej. cómo se configura una ruta estática flotante"><button id="btnBuscarGuias">Buscar</button></div>
+      <div id="gResultados"></div>
+    </div>
+  </section>
+
+  <!-- ============================= LOGROS ============================= -->
+  <section id="v-logros" class="vista">
+    <header class="cabeza"><h1>Tu progreso</h1><p class="sub">Ganas XP con todo lo que haces en el lab: prácticas, exámenes, subneteo, Wireshark, misiones de Linux y lecciones.</p></header>
+    <div id="logrosVista"></div>
+  </section>
+
+  <!-- =========================== HISTORIAL =========================== -->
+  <section id="v-historial" class="vista">
+    <header class="cabeza"><h1>Historial</h1></header>
+    <div class="tarjeta"><table class="tabla" id="tablaHist"></table></div>
+  </section>
+
+  <!-- ============================ AJUSTES ============================ -->
+  <section id="v-ajustes" class="vista">
+    <header class="cabeza"><h1>Ajustes</h1></header>
+    <div class="tarjeta">
+      <div class="fila">
+        <label>Modelo pesado (diseña prácticas y exámenes)<select id="cPesado"></select></label>
+        <label>Modelo ligero (explica y califica comandos)<select id="cLigero"></select></label>
+      </div>
+      <div class="fila">
+        <label>Modelo de visión (lee capturas de la CLI)<select id="cVision"></select></label>
+        <label>Modelo de embeddings (para tus guías)<select id="cEmbed"></select></label>
+      </div>
+      <div class="fila">
+        <label>Modelo de seguridad (tutor de Wireshark/Linux/Red vs Blue y atacante en Pesadilla)<select id="cSeguridad"></select></label>
+        <label>Modelo de código (mentor de la Academia)<select id="cCodigo"></select></label>
+      </div>
+      <label>Tamaño de Packet Tracer (escala; 1.25 = 125%)
+        <input id="cEscala" type="number" min="0.8" max="2.5" step="0.05" style="max-width:160px">
+      </label>
+      <label class="check"><input type="checkbox" id="cVerificar"> Verificar la clave de los exámenes (más lento, más confiable)</label>
+      <label class="check"><input type="checkbox" id="cExplicarPesado"> Explicar errores con el modelo pesado</label>
+      <label class="check"><input type="checkbox" id="cUsarGuias"> Usar mis guías al generar (más exacto; tarda un poco más)</label>
+      <div class="acciones"><button class="primario" id="btnGuardarCfg">Guardar</button></div>
+    </div>
+    <div class="tarjeta">
+      <h3 style="margin-top:0">🛡️ ¿Qué modelo sabe más de ciberseguridad?</h3>
+      <p class="sub">Les hago el mismo examen de SOC/blue team (24 preguntas con respuesta conocida: ATT&CK, Event IDs, Kerberos, Wireshark, Linux) a Foundation-Sec y a tus modelos, mido aciertos y velocidad, y dejo el ganador como modelo de seguridad. Tarda unos minutos.</p>
+      <div class="acciones"><button id="btnCompararSeg">🏁 Comparar modelos</button></div>
+      <div id="compSeg"></div>
+    </div>
+    <div class="tarjeta">
+      <h3 style="margin-top:0">🔊 Voz</h3>
+      <div id="ajustesVoz"></div>
+    </div>
+    <div class="tarjeta">
+      <h3>Memoria de video</h3>
+      <p id="vramInfo" class="sub"></p>
+      <div class="acciones">
+        <button id="btnLiberar">Liberar VRAM ahora</button>
+        <button id="btnCerrar" class="peligro">Cerrar la app</button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div id="aviso" class="aviso"></div>
+<script src="/web/i18n.js"></script>
+<script src="/web/app.js"></script>
+<script src="/web/voz.js"></script>
+<script src="/web/linux.js"></script>
+<script src="/web/retos.js"></script>
+<script src="/web/rvb.js"></script>
+<script src="/web/rvb2.js"></script>
+<script src="/web/repaso.js"></script>
+<script src="/web/academia.js"></script>
+<script src="/web/rutas.js"></script>
+<script src="/web/sv.js"></script>
+<script src="/web/vmlab.js"></script>
+<script src="/web/cpu.js"></script>
+<script src="/web/soc.js"></script>
+<script src="/web/soc2.js"></script>
+<script src="/web/indice.js"></script>
+<script src="/web/siem_lab.js"></script>
+<script src="/web/salud.js"></script>
+</body>
+</html>
