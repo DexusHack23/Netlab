@@ -5,6 +5,16 @@ NetLab uses local LLMs (via [Ollama](https://ollama.com)) to generate Cisco Pack
 
 > The app UI is available in Spanish and English. The original Spanish documentation is in [`LEEME.md`](LEEME.md).
 
+## Screenshots
+
+| Home | CCNA path |
+|---|---|
+| ![Home](docs/screenshots/home.png) | ![CCNA path](docs/screenshots/ccna-path.png) |
+| **Self-validated Packet Tracer lab** | **Worked example (theory)** |
+| ![Packet Tracer lab](docs/screenshots/packet-tracer-lab.png) | ![Worked example](docs/screenshots/theory-worked-example.png) |
+
+![Linux missions](docs/screenshots/linux-missions.png)
+
 ## Features
 
 - **Packet Tracer lab generator.** Describe a network ("3 routers in a triangle with OSPF…") and get the diagram, addressing plan, configs and a PTBuilder script to build it inside Packet Tracer. Before showing it, the code checks that ports exist on each model, that IPs/ports are not duplicated and that each link joins devices on the same subnet.
@@ -53,6 +63,34 @@ Requirements: Windows, Python 3.10+, [Ollama](https://ollama.com) with at least 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\instalar.ps1
 ```
+
+### Real Linux / SIEM labs (VirtualBox) and Hyper-V
+
+Most of NetLab works out of the box. The labs that run on a **real Ubuntu VM** (real Linux missions, the SIEM with Elasticsearch + Kibana, and the local attack target) need [VirtualBox](https://www.virtualbox.org), and they run much better with **Hyper-V turned off**:
+
+- **Hyper-V on:** VirtualBox falls back to its slow NEM mode. NetLab detects it and limits the VM to 1 CPU core so it doesn't freeze, but booting and the SIEM are very slow.
+- **Hyper-V off:** VirtualBox uses VT-x/AMD-V directly and the SIEM VM gets 6 cores.
+
+Turn it off (PowerShell **as Administrator**, then restart Windows):
+
+```powershell
+bcdedit /set hypervisorlaunchtype off
+```
+
+Check after the restart (`False` means it is off):
+
+```powershell
+(Get-CimInstance Win32_ComputerSystem).HypervisorPresent
+```
+
+To turn it back on: `bcdedit /set hypervisorlaunchtype auto` and restart.
+
+Notes:
+- While Hyper-V is off, **WSL 2, Docker Desktop and Windows Sandbox won't work**.
+- If `HypervisorPresent` is still `True`, also disable *Core isolation → Memory integrity* in Windows Security and restart.
+- Virtualization (Intel VT-x / AMD-V / SVM) must be enabled in the BIOS/UEFI.
+- The SIEM VM uses 16 GB of RAM; the regular Linux VM uses 2 GB. When NetLab closes, the VM is paused to disk (~the size of its RAM).
+- If you switch Hyper-V on/off, the VM's saved state is discarded and it cold-boots once (this is expected).
 
 Tests:
 

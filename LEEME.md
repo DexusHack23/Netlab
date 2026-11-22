@@ -148,3 +148,22 @@ cerró de golpe). Nada de `__pycache__`.
 ## Pruebas
 
 `python -B -m pruebas.test_checker` comprueba el verificador con configuraciones de ejemplo.
+
+## Labs con VM real (VirtualBox) e Hyper-V
+
+Los labs que usan la VM de Ubuntu real (misiones de Linux real, el SIEM con Elasticsearch + Kibana y el objetivo de ataque local) necesitan VirtualBox y van mucho mejor **con Hyper-V apagado**. Con Hyper-V encendido, VirtualBox usa el modo NEM (lento) y NetLab limita la VM a 1 núcleo para que no se congele.
+
+Apagarlo (PowerShell **como administrador** y reinicia Windows):
+
+```powershell
+bcdedit /set hypervisorlaunchtype off
+```
+
+Comprobar tras reiniciar (`False` = apagado): `(Get-CimInstance Win32_ComputerSystem).HypervisorPresent`
+
+Volver a encenderlo: `bcdedit /set hypervisorlaunchtype auto` y reiniciar.
+
+- Con Hyper-V apagado **no funcionan WSL 2, Docker Desktop ni Windows Sandbox**.
+- Si sigue en `True`, desactiva también *Aislamiento del núcleo → Integridad de memoria* en Seguridad de Windows y reinicia.
+- La virtualización (VT-x / AMD-V / SVM) debe estar activada en la BIOS/UEFI.
+- La VM del SIEM usa 16 GB de RAM; la de Linux, 2 GB.
